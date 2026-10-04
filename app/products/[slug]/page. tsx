@@ -1,0 +1,98 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { products, getAllCategories } from "../data/products";
+import ProductCard from "../components/ProductCard";
+
+export const metadata: Metadata = {
+  title: "Semua Produk",
+  description:
+    "Jelajahi semua perlengkapan mendaki yang tersedia untuk disewa.",
+};
+
+type ProductsPageProps = {
+  searchParams: Promise<{ kategori?: string }>;
+};
+
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) { 
+  const { kategori } = await searchParams;
+
+  const categories = getAllCategories();
+  const activeCategory = kategori ?? "Semua";
+
+  const filtered =
+    activeCategory === "Semua"
+      ? products
+      : products.filter((p) => p.category === activeCategory);
+
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Semua Produk</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {filtered.length} produk ditemukan
+          {activeCategory !== "Semua" && ` di kategori "${activeCategory}"`}
+        </p>
+      </div>
+
+      <div className="mb-8 flex flex-wrap gap-2">
+        <FilterLink
+          href="/products"
+          label="Semua"
+          active={activeCategory === "Semua"}
+        />
+        {categories.map((cat) => (
+          <FilterLink
+            key={cat}
+            href={`/products?kategori=${encodeURIComponent(cat)}`}
+            label={cat}
+            active={activeCategory === cat}
+          />
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
+          <p className="text-gray-500">Belum ada produk di kategori ini.</p>
+          <Link
+            href="/products"
+            className="mt-2 inline-block text-sm font-medium text-green-700 hover:underline"
+          >
+            ← Lihat semua produk
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {filtered.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FilterLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors " +
+        (active
+          ? "border-green-700 bg-green-700 text-white"
+          : "border-gray-300 bg-white text-gray-700 hover:border-green-700 hover:text-green-700")
+      }
+    >
+      {label}
+    </Link>
+  );
+}
